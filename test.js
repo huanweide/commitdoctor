@@ -155,3 +155,29 @@ test('端到端：非 git 目录 -> readCommits 退出码 1', () => {
   process.exit = realExit;
   assert.strictEqual(code, 1);
 });
+
+test('readCommits 返回的 hash 不含换行污染（tformat 修复）', () => {
+  const dir = makeRepo();
+  const commits = readCommits(mk({ path: dir, maxCommits: 50 }));
+  assert.ok(commits.length >= 1);
+  for (const cc of commits) {
+    assert.ok(!cc.hash.includes('\n'), `hash 含换行: ${JSON.stringify(cc.hash)}`);
+    assert.strictEqual(cc.hash, cc.hash.trim());
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('CLI --fail-on-high 对含 high 仓库退出码 1', () => {
+  const dir = makeRepo(); // 含 api_key=... high 问题
+  const r = spawnSync(process.execPath, ['index.js', '-p', dir, '--fail-on-high'], { cwd: __dirname, encoding: 'utf8' });
+  assert.strictEqual(r.status, 1);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('CLI --no-check-emoji 不报未知标志且关闭 emoji 检测', () => {
+  const dir = makeRepo();
+  const r = spawnSync(process.execPath, ['index.js', '-p', dir, '--no-check-emoji', '--json'], { cwd: __dirname, encoding: 'utf8' });
+  assert.strictEqual(r.status, 0);
+  assert.ok(!r.stdout.includes('subject-emoji'));
+  fs.rmSync(dir, { recursive: true, force: true });
+});

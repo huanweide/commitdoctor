@@ -49,7 +49,7 @@ function stripAnsi(s) { return s.replace(/\u001b\[[0-9;]*m/g, ''); }
 
 function parseArgs(argv) {
   const NUM_FLAGS = new Set(['-n', '--max-commits', '--max-subject-len', '--max-high', '--max-medium', '--max-issues', '--min-score']);
-  const BOOL_FLAGS = new Set(['--ignore-merges', '--json', '-V', '--version', '--check-emoji', '--help', '-h']);
+  const BOOL_FLAGS = new Set(['--ignore-merges', '--json', '-V', '--version', '--fail-on-high', '--help', '-h']);
   const STR_FLAGS = new Set(['-p', '--path', '--since']);
   const opts = {
     path: process.cwd(), maxCommits: 50, maxSubjectLen: 72,
@@ -61,6 +61,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '-V' || a === '--version') { console.log(VERSION); process.exit(0); }
     if (a === '--help' || a === '-h') { printHelp(); process.exit(0); }
+    if (a === '--no-check-emoji') { opts.checkEmoji = false; continue; }
     if (NUM_FLAGS.has(a)) {
       const v = Number(argv[++i]);
       if (!Number.isFinite(v)) { console.error(`错误：标志 ${a} 需要整数参数`); process.exit(2); }
@@ -73,7 +74,7 @@ function parseArgs(argv) {
     } else if (BOOL_FLAGS.has(a)) {
       if (a === '--ignore-merges') opts.ignoreMerges = true;
       else if (a === '--json') opts.json = true;
-      else if (a === '--check-emoji') opts.checkEmoji = true;
+      else if (a === '--fail-on-high') opts.failOnHigh = true;
     } else if (STR_FLAGS.has(a)) {
       const v = argv[++i];
       if (v === undefined) { console.error(`错误：标志 ${a} 需要字符串参数`); process.exit(2); }
@@ -119,7 +120,8 @@ function printHelp() {
 // 读取 git 日志，返回提交对象数组
 function readCommits(opts) {
   // 用 %B 取完整消息（含主题与正文间空行），避免 %s+%b 分离丢失空行导致 no-body-separator 误报
-  const args = ['-C', opts.path, 'log', '--pretty=format:%h%x1f%an%x1f%at%x1f%B%x1e'];
+  // 用 tformat: 而非 format:，避免 git 在每条记录后额外追加换行污染下一条记录的 hash 字段
+  const args = ['-C', opts.path, 'log', '--pretty=tformat:%h%x1f%an%x1f%at%x1f%B%x1e'];
   if (opts.ignoreMerges) args.push('--no-merges');
   if (opts.since) args.push('--since=' + opts.since);
   args.push('-n', String(opts.maxCommits));
@@ -133,7 +135,8 @@ function readCommits(opts) {
     process.exit(1);
   }
   const out = stripAnsi(res.stdout || '');
-  const records = out.split('\x1e').map(r => r.replace(/\n+$/, '')).filter(Boolean);
+  // git log 在每条记录后会插入换行作为记录分隔，\x1e 后紧跟的 \n 会污染下一条记录开头，需同时去掉首尾换行
+  const records = out.split('\x1e').map(r => r.replace(/^\n+/, '').replace(/\n+$/, '')).filter(Boolean);
   const commits = [];
   for (const rec of records) {
     const parts = rec.split('\x1f');
@@ -249,8 +252,6 @@ function printReport(commits, allIssues, score, counts, opts) {
 
 function main() {
   const opts = parseArgs(process.argv.slice(2));
-  // 支持 --no-check-emoji
-  if (process.argv.includes('--no-check-emoji')) opts.checkEmoji = false;
 
   const commits = readCommits(opts);
   let allIssues = [];
