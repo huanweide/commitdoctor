@@ -5,6 +5,7 @@
 <!-- /badges -->
 
 # commitdoctor
+> **English** · [README_EN.md](./README_EN.md)
 
 零依赖单文件 git 提交消息体检 CLI。扫描仓库最近 N 条提交消息的格式规范坏味道，给出 0-100 健康分，并可作为 CI 门禁。
 
