@@ -1,8 +1,19 @@
+<!-- badges -->
+[![Node](https://img.shields.io/badge/Node.js-≥18-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Zero-Deps](https://img.shields.io/badge/dependencies-zero-0f9d58?logo=npm&logoColor=white)](https://www.npmjs.com/)
+[![License](https://img.shields.io/github/license/huanweide/commitdoctor)](LICENSE)
+<!-- /badges -->
+
 # commitdoctor
 
 零依赖单文件 git 提交消息体检 CLI。扫描仓库最近 N 条提交消息的格式规范坏味道，给出 0-100 健康分，并可作为 CI 门禁。
 
-与 [`repodoctor`](https://github.com/huanweide/repodoctor)（仓库工程卫生：危险文件 / 大文件 / LICENSE / 无意义提交占比）互补：repodoctor 看"仓库工程卫生"，commitdoctor 看"提交消息格式规范"，拼成 git 层治理双拼。
+与 [`repodoctor`](https://github.com/huanweide/repodoctor)（仓库工程卫生：危险文件 / 大文件 / LICENSE / 无意义提交占比）互补：repodoctor 看「仓库工程卫生」，commitdoctor 看「提交消息格式规范」，拼成 git 层治理双拼。
+
+## 谁该用 / 谁先别用
+
+- **该用**：想要提交历史可读、可追溯的团队；接手提交历史混乱的仓库想先量化一轮；想在 CI 里做提交规范门禁。
+- **先别用**：已全面用 commitlint + Conventional Commits 强约束、且历史本就规范的团队（可作补充但仍可用）；统一 squash-merge、历史天然整洁的。
 
 ## 特性
 
@@ -76,8 +87,16 @@ npx commitdoctor
 
 ## 局限
 
-- `has-secret` 在消息层做轻量正则匹配，可能误命中正常含 `token` / `access_key` 等词的合法描述；它定位"明文凭据泄露"高危信号，与 `repodoctor` 的源码层密钥扫描互补，不替代专业密钥扫描器。
-- 不强制 Conventional Commits；仅对"明显像类型前缀但格式不符"做低严重度提示。
+- `has-secret` 在消息层做轻量正则匹配，可能误命中正常含 `token` / `access_key` 等词的合法描述；它定位「明文凭据泄露」高危信号，与 `repodoctor` 的源码层密钥扫描互补，不替代专业密钥扫描器。
+- 不强制 Conventional Commits；仅对「明显像类型前缀但格式不符」做低严重度提示。
+
+## ⭐ 给个 Star
+
+如果 commitdoctor 帮你把乱糟糟的提交历史变干净过，欢迎点个 Star ⭐：https://github.com/huanweide/commitdoctor
+
+## 作者
+
+由 [huanweide](https://github.com/huanweide) 维护。
 
 ## License
 
